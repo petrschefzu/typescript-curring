@@ -42,14 +42,16 @@ type First<F> = F extends (first: infer A, ...next: infer B) => any ? A : never;
 // Doesn't work with required finction declaration
 // type Next<F extends any[]> = ((...incomingArgs: F) => any) extends (current: any, ...next: infer P) => any ? P : never;
 
-type Next<F> = F extends (first: infer A, ...next: infer B) => any ? B : never;
+type Next<F> = F extends (first: infer A, ...next: infer B) => infer R
+  ? (...next: B) => R
+  : never;
 
 /*
  * Let's put all together
  * type Curry<Input extends any[]> = (first: First<Input>) => Curry<Next<Input>>
  */
 
-type Curry<Input> = (first: First<Input>) => Curry<Next<Input>>;
+type Curry<F> = (first: First<F>) => Curry<Next<F>>;
 
 declare function DynamicParamsCurrying<F>(fn: F): Curry<F>;
 
@@ -58,6 +60,6 @@ const ternarySum = (a: number, b: number, c: number) => a + b + c;
 const c = DynamicParamsCurrying(ternarySum);
 
 // After applying our DynamicParamsCurrying function to ternary function above, the following is equivalent:
-const x = c(1)(2)(3); // x: number
-const y = c(1, 2)(3); // y: number
+const x = c(1); // x: number
+const y = x(1, 2)(3); // y: number
 const z = c(1, 2, 3); // z: number
