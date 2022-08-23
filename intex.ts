@@ -16,4 +16,43 @@
 // 3. If there is next arument
 // 4. How to iterate
 
-type Curry = "";
+/* First parameter with validating input
+ * Validation input:
+ * type testFirst = First<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
+ *
+ * return never if validation fails
+ */
+
+// Any type doesn't allow us to iterate
+// type First<T> = T extends any ? T[0] : never;
+
+// Doesn't accept array
+// type First<T> = T extends [any] ? T[0] : never;
+
+type First<F> = F extends [any, ...any[]] ? F[0] : never;
+type testFirst = First<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
+
+/*
+ * Let's start iteration, get the next parameter in row
+ * type testNext = Next<["a", 1, [1], ["a"], number, string, { a: "a" }]>
+ */
+
+// Doesn't work for some reason :-D
+// type Next<F> = F extends (current: any, ...next: infer P) => infer R ? (...next: P) => R : never;
+
+type Next<F extends any[]> = ((...incomingArgs: F) => any) extends (
+  current: any,
+  ...next: infer P
+) => any
+  ? P
+  : never;
+
+type testNext = Next<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
+
+/*
+ * Let's put all together
+ * extends any[] doesn't satisfy requirement of DynamicParamsCurrying
+ * type Curry<Input extends any[]> = (first: First<Input>) => Curry<Next<Input>>
+ */
+
+// declare function DynamicParamsCurrying<F>(fn: F): Curry<F>
