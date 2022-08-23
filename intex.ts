@@ -29,7 +29,9 @@
 // Doesn't accept array
 // type First<T> = T extends [any] ? T[0] : never;
 
-type First<F> = F extends [any, ...any[]] ? F[0] : never;
+type First<Input> = Input extends [infer Input1, ...infer InputX]
+  ? Input1
+  : never;
 type testFirst = First<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
 
 /*
@@ -40,19 +42,19 @@ type testFirst = First<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
 // Doesn't work for some reason :-D
 // type Next<F> = F extends (current: any, ...next: infer P) => infer R ? (...next: P) => R : never;
 
-type Next<F extends any[]> = ((...incomingArgs: F) => any) extends (
-  current: any,
-  ...next: infer P
-) => any
-  ? P
+// Doesn't work with required finction declaration
+// type Next<F extends any[]> = ((...incomingArgs: F) => any) extends (current: any, ...next: infer P) => any ? P : never;
+
+type Next<Input> = Input extends [infer Input1, ...infer InputX]
+  ? InputX
   : never;
 
 type testNext = Next<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
 
 /*
  * Let's put all together
- * extends any[] doesn't satisfy requirement of DynamicParamsCurrying
  * type Curry<Input extends any[]> = (first: First<Input>) => Curry<Next<Input>>
  */
 
-// declare function DynamicParamsCurrying<F>(fn: F): Curry<F>
+type Curry<Input> = (first: First<Input>) => Curry<Next<Input>>;
+declare function DynamicParamsCurrying<F>(fn: F): Curry<F>;
