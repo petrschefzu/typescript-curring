@@ -29,10 +29,7 @@
 // Doesn't accept array
 // type First<T> = T extends [any] ? T[0] : never;
 
-type First<Input> = Input extends [infer Input1, ...infer InputX]
-  ? Input1
-  : never;
-type testFirst = First<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
+type First<F> = F extends (first: infer A, ...next: infer B) => any ? A : never;
 
 /*
  * Let's start iteration, get the next parameter in row
@@ -45,11 +42,7 @@ type testFirst = First<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
 // Doesn't work with required finction declaration
 // type Next<F extends any[]> = ((...incomingArgs: F) => any) extends (current: any, ...next: infer P) => any ? P : never;
 
-type Next<Input> = Input extends [infer Input1, ...infer InputX]
-  ? InputX
-  : never;
-
-type testNext = Next<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
+type Next<F> = F extends (first: infer A, ...next: infer B) => any ? B : never;
 
 /*
  * Let's put all together
@@ -57,4 +50,14 @@ type testNext = Next<["a", 1, [1], ["a"], number, string, { a: "a" }]>;
  */
 
 type Curry<Input> = (first: First<Input>) => Curry<Next<Input>>;
+
 declare function DynamicParamsCurrying<F>(fn: F): Curry<F>;
+
+const ternarySum = (a: number, b: number, c: number) => a + b + c;
+
+const c = DynamicParamsCurrying(ternarySum);
+
+// After applying our DynamicParamsCurrying function to ternary function above, the following is equivalent:
+const x = c(1)(2)(3); // x: number
+const y = c(1, 2)(3); // y: number
+const z = c(1, 2, 3); // z: number
