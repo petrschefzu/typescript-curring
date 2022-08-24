@@ -29,12 +29,9 @@
 // Doesn't accept array
 // type First<T> = T extends [any] ? T[0] : never;
 
-type First<F> = F extends (
-  first: infer FirstArgType,
-  ...next: any
-) => infer FirstArgType
-  ? FirstArgType
-  : never;
+type First<Input extends any[]> = Input extends [infer Input1, ...infer InputX]
+  ? Input1
+  : [];
 
 /*
  * Let's start iteration, get the next parameter in row
@@ -47,6 +44,14 @@ type First<F> = F extends (
 // Doesn't work with required finction declaration
 // type Next<F extends any[]> = ((...incomingArgs: F) => any) extends (current: any, ...next: infer P) => any ? P : never;
 
+type Next<Input extends any[]> = ((...incomingArgs: Input) => any) extends (
+  current: any,
+  ...next: infer Rest
+) => any
+  ? Rest
+  : never;
+
+/*
 type Next<F> = F extends (
   first: any,
   ...next: infer RestArgTypes
@@ -54,14 +59,22 @@ type Next<F> = F extends (
   ? RestArgTypes
   : never;
 
+  */
 /*
  * Let's put all together
  * type Curry<Input extends any[]> = (first: First<Input>) => Curry<Next<Input>>
  */
 
-type Curry<F> = (first: First<F>) => Curry<Next<F>>;
+type HasNext<F> = F extends [] | [any] ? false : true;
 
-declare function DynamicParamsCurrying<F>(fn: F): Curry<F>;
+type Curry<F extends any[], R> = (
+  arg0: First<F>,
+  ...next: Next<Partial<F>>
+) => HasNext<F> extends true ? Curry<Next<F>, R> : R;
+
+declare function DynamicParamsCurrying<A extends any[], R>(
+  fn: (...args: A) => R
+): Curry<A, R>;
 
 const ternarySum = (a: number, b: number, c: number) => a + b + c;
 
